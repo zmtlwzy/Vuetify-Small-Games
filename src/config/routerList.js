@@ -21,4 +21,10 @@ export default [
     component: "Gobang",
     meta: { title: "五子棋", icon: "mdi-grid" },
   },
+  {
+    path: "/AiGobang",
+    name: "AiGobang",
+    component: "AiGobang",
+    meta: { title: "人机五子棋", icon: "mdi-grid" },
+  },
 ];

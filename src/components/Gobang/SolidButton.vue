@@ -15,7 +15,7 @@ export default {
   },
   methods:{
       handelClick(){
-          this.$emit('restart')
+          this.$emit('click')
       }
   }
 }

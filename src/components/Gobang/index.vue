@@ -2,35 +2,27 @@
   <div id="gobang" class="d-flex justify-center align-center flex-column">
     <s-btn class="tips my-6" disabled>
       <template #default>
-        <v-icon color="black" class="mr-2">{{icon}}</v-icon>
+        <v-icon color="black" class="mr-2">{{ icon }}</v-icon>
         {{ gameResult || gameInfo }}
       </template>
     </s-btn>
 
     <s-btn disabled class="gobang-board">
       <div class="gobang-container" :style="conStyle" :class="sizeClass">
-        <div
-          class="cell"
-          v-for="(i, index) in totalNum"
-          :key="i"
-          @click="handleClick(index)"
-        >
+        <div class="cell" v-for="(i, index) in totalNum" :key="i" @click="handleClick(index)">
           <div
             ref="piece"
             :class="{
               circle: checkerboard[index] !== 0,
               white: checkerboard[index] === 1,
-              black: checkerboard[index] === 2,
+              black: checkerboard[index] === 2
             }"
           ></div>
         </div>
       </div>
     </s-btn>
-    <div
-      class="button mt-8 d-flex flex-column justify-center"
-      :style="{ marginBottom: '20px', width: '82%' }"
-    >
-      <div class="d-flex justify-center mb-6">
+    <div class="button mt-8 d-flex flex-column justify-center" :style="{ marginBottom: '20px', width: '100%' }">
+      <!-- <div class="d-flex justify-center mb-6">
         <v-btn-toggle
           v-model="toggle_exclusive"
           mandatory
@@ -42,20 +34,22 @@
           <v-btn @click="normal"> <span class="mx-4"> 12X12 </span></v-btn>
           <v-btn @click="large"> <span class="mx-4"> 16X16 </span></v-btn>
         </v-btn-toggle>
+      </div> -->
+
+      <div class="d-flex justify-space-between mb-6">
+        <div :style="{ width: '40%' }">
+          <s-btn @click="blackFirst" class="text-center">
+            黑色先手
+          </s-btn>
+        </div>
+        <div :style="{ width: '40%' }">
+          <s-btn @click="whiteFirst" class="text-center">
+            白色先手
+          </s-btn>
+        </div>
       </div>
 
-      <div class="d-flex justify-space-evenly mb-6">
-        <v-btn color="black" class="white--text" @click="blackFirst"
-          >黑色先手</v-btn
-        >
-        <v-btn color="white" class="black--text" @click="whiteFirst"
-          >白色先手</v-btn
-        >
-      </div>
-
-      <s-btn @restart="isReset" :disabled="isNull" class="text-center"
-        >重新开始</s-btn
-      >
+      <s-btn @click="isReset" :disabled="isNull" class="text-center">重新开始</s-btn>
     </div>
     <v-row justify="center">
       <v-dialog v-model="dialog" persistent max-width="290">
@@ -64,12 +58,8 @@
           <v-card-text>是否重新开始游戏？</v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="green darken-1" text @click="dialog = false"
-              >取消</v-btn
-            >
-            <v-btn color="green darken-1" text @click="reset(dislogArg)"
-              >确定</v-btn
-            >
+            <v-btn color="green darken-1" text @click="dialog = false">取消</v-btn>
+            <v-btn color="green darken-1" text @click="reset(dialogArg)">确定</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -78,16 +68,16 @@
 </template>
 
 <script>
-import sBtn from "./SolidButton.vue"
+import sBtn from './SolidButton.vue'
 const COLOR = {
   White: 1,
-  Black: 2,
+  Black: 2
 }
 
 export default {
-  name: "gobang",
+  name: 'gobang',
   components: {
-    sBtn,
+    sBtn
   },
   data() {
     return {
@@ -102,13 +92,13 @@ export default {
       nextColor: null,
       gameResult: null,
       stateToggle: null,
-      isWin:false,
+      isWin: false,
 
-      icon:'mdi-information',
+      icon: 'mdi-information',
 
       toggle_exclusive: 1,
       dialog: false,
-      dialogArg: {},
+      dialogArg: {}
     }
   },
   watch: {
@@ -118,9 +108,9 @@ export default {
     blackArr(val) {
       this.gobangRule(val, COLOR.Black)
     },
-    isFull(val){
-      if(val) {
-        this.gameResult = "此局平局，请重新开始"
+    isFull(val) {
+      if (val) {
+        this.gameResult = '此局平局，请重新开始'
       }
     }
   },
@@ -129,23 +119,23 @@ export default {
     //   return "blue lighten-2"
     // },
     alertType() {
-      mdi-information
-      return "mdi-check-circle"
+      mdi - information
+      return 'mdi-check-circle'
     },
     conStyle() {
       return {
         gridTemplateColumns: `repeat(${this.h},1fr)`,
-        gridTemplateRows: `repeat(${this.v},1fr)`,
+        gridTemplateRows: `repeat(${this.v},1fr)`
       }
     },
     sizeClass() {
       switch (this.toggle_exclusive) {
         case 0:
-          return "large"
+          return 'large'
         case 1:
-          return "normal"
+          return 'normal'
         case 2:
-          return "small"
+          return 'small'
       }
     },
     totalNum() {
@@ -158,23 +148,23 @@ export default {
       return this.black.map(this.getColorArr)
     },
     isNull() {
-      return this.checkerboard.every((item) => {
+      return this.checkerboard.every(item => {
         return item === 0
       })
     },
     isFull() {
-      return this.checkerboard.every((item) => {
+      return this.checkerboard.every(item => {
         return item !== 0
       })
     },
     gameInfo() {
       switch (this.nextColor) {
         case COLOR.White:
-          return "下一步：白色方"
+          return '下一步：白色方'
         case COLOR.Black:
-          return "下一步：黑色方"
+          return '下一步：黑色方'
       }
-    },
+    }
   },
   beforeMount() {
     this.checkerboard = this.getInitialBoardData()
@@ -184,19 +174,19 @@ export default {
     small() {
       this.isReset({
         h: 8,
-        v: 8,
+        v: 8
       })
     },
     normal() {
       this.isReset({
         h: 12,
-        v: 12,
+        v: 12
       })
     },
     large() {
       this.isReset({
         h: 16,
-        v: 16,
+        v: 16
       })
     },
 
@@ -234,7 +224,7 @@ export default {
     getColorArr(item, index) {
       return {
         row: Math.floor(item / this.h),
-        col: item % this.h,
+        col: item % this.h
       }
     },
 
@@ -260,18 +250,18 @@ export default {
       this.isWin = true
       switch (winColor) {
         case COLOR.White:
-          this.gameResult = "白子获胜"
+          this.gameResult = '白子获胜'
 
           break
         case COLOR.Black:
-          this.gameResult = "黑子获胜"
+          this.gameResult = '黑子获胜'
           break
       }
 
       // 避免最后一个棋子没有动画
       setTimeout(() => {
-        res.forEach((item) => {
-          this.$refs.piece[item].classList.add("twinkle-animation")
+        res.forEach(item => {
+          this.$refs.piece[item].classList.add('twinkle-animation')
         })
       })
     },
@@ -284,7 +274,7 @@ export default {
 
     isReset(overlayData) {
       if (!this.isNull && !this.isWin) {
-        this.dislogArg = overlayData
+        this.dialogArg = overlayData
         this.dialog = true
       } else {
         this.reset(overlayData)
@@ -301,7 +291,7 @@ export default {
       this.gameResult = null
       this.icon = 'mdi-information'
       this.isWin = false
-      
+
       this.nextStep()
       this.dialog = false
     },
@@ -334,7 +324,7 @@ export default {
         // 是否连成 ‘-’
         while (true) {
           if (
-            (findedVal = sortVal.find((item) => {
+            (findedVal = sortVal.find(item => {
               return item.row === row && item.col - col === num
             }))
           ) {
@@ -355,7 +345,7 @@ export default {
         // 是否连成 ‘|’
         while (true) {
           if (
-            (findedVal = sortVal.find((item) => {
+            (findedVal = sortVal.find(item => {
               return item.row === row + num && item.col === col
             }))
           ) {
@@ -376,7 +366,7 @@ export default {
         // 是否连成 ‘/’
         while (true) {
           if (
-            (findedVal = sortVal.find((item) => {
+            (findedVal = sortVal.find(item => {
               return item.row === row + num && item.col - col === -num
             }))
           ) {
@@ -397,7 +387,7 @@ export default {
         // 是否连成 ‘\’
         while (true) {
           if (
-            (findedVal = sortVal.find((item) => {
+            (findedVal = sortVal.find(item => {
               return item.row === row + num && item.col - col === num
             }))
           ) {
@@ -415,14 +405,13 @@ export default {
           }
         }
       }
-    },
-  },
+    }
+  }
 }
 </script>
 
 <style lang="scss">
-$piece-shadow: 1px 2px 3px rgba(104, 104, 104, 0.616),
-  2px 4px 8px rgba(143, 143, 143, 0.5);
+$piece-shadow: 1px 2px 3px rgba(104, 104, 104, 0.616), 2px 4px 8px rgba(143, 143, 143, 0.5);
 $checkerboard-bg-color: #eee;
 #gobang {
   .tips {
@@ -453,7 +442,7 @@ $checkerboard-bg-color: #eee;
       }
 
       &::before {
-        content: "";
+        content: '';
         display: block;
         position: absolute;
         width: 100%;
@@ -475,21 +464,12 @@ $checkerboard-bg-color: #eee;
           border-radius: 50%;
           &.white {
             background-color: #fff;
-            background-image: radial-gradient(
-              circle at 45% 40%,
-              #fff 5%,
-              #f0f0f0 60%,
-              #666 100%
-            );
+            background-image: radial-gradient(circle at 45% 40%, #fff 5%, #f0f0f0 60%, #666 100%);
             box-shadow: $piece-shadow;
           }
           &.black {
             background-color: #000;
-            background-image: radial-gradient(
-              circle at 40% 20%,
-              rgba(204, 204, 204, 0.555) 0%,
-              #000 60%
-            );
+            background-image: radial-gradient(circle at 40% 20%, rgba(204, 204, 204, 0.555) 0%, #000 60%);
             box-shadow: $piece-shadow;
           }
         }
