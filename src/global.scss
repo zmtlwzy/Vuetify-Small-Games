@@ -1,7 +1,7 @@
 html,
 body {
   height: 100%;
-  -webkit-user-select: none;
+  user-select: none;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
 }
@@ -16,13 +16,6 @@ body {
 }
 
 @keyframes twinkle {
-  /* 70% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 0;
-    } */
   from,
   50%,
   to {
@@ -99,6 +92,15 @@ body {
   animation-fill-mode: backwards;
   animation-timing-function: cubic-bezier(0, 1, 0, 1);
   animation-iteration-count: 2;
+}
+
+.twinkle-animation2 {
+  animation-name: twinkle;
+  animation-delay: .1s;
+  animation-duration: 1.2s;
+  animation-fill-mode: backwards;
+  animation-timing-function: cubic-bezier(0, 1, 0, 1);
+  animation-iteration-count: 1.5;
 }
 
 .jello-animation {

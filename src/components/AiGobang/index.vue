@@ -9,25 +9,31 @@
         ref="svg"
       >
         <defs>
+          <!-- 白子颜色 -->
           <radialGradient spreadMethod="reflect" cx="30%" cy="30%" r="90%" fx="45%" fy="35%" fr="0%" id="white-fill">
             <stop offset="5%" stop-color="#fff" />
             <stop offset="57%" stop-color="#dedede" />
             <stop offset="100%" stop-color="#8e8e8e" />
           </radialGradient>
 
+          <!-- 黑子颜色 -->
           <radialGradient spreadMethod="reflect" cx="30%" cy="30%" r="80%" fx="45%" fy="35%" fr="0%" id="black-fill">
             <stop offset="5%" stop-color="#6e6e6e" />
             <stop offset="65%" stop-color="#0c0c0c" />
             <stop offset="95%" stop-color="black" />
           </radialGradient>
+
+          <!-- 棋子阴影 -->
           <filter id="shadow">
             <feDropShadow :dx="cellSize / 30" :dy="cellSize / 20" :stdDeviation="cellSize / 35" flood-opacity="0.5" />
           </filter>
 
+          <!-- 棋盘背景图片 -->
           <pattern id="chess-board-bg" width="1" height="1">
             <image xlink:href="../../assets/bg.jpg"></image>
           </pattern>
 
+          <!-- 棋盘阴影 -->
           <filter id="board-shadow" x="0" y="0" width="200%" height="200%">
             <feOffset in="SourceAlpha" dx="2" dy="1" result="offsetBlur" />
             <feColorMatrix
@@ -46,6 +52,7 @@
           </filter>
         </defs>
 
+        <!-- 当前落子位置 -->
         <symbol id="current-position" viewBox="0 0 100 100">
           <path
             d="M0 20 v-20 h20 M80 0 h20 v20 M100 80 v20 h-20 M20 100 h-20 v-20"
@@ -54,6 +61,8 @@
             stroke-width="6"
           />
         </symbol>
+
+        <!-- 棋盘下方按钮 -->
         <g id="btn" :class="{ hide: bottomBtnHide }">
           <g id="restart-btn" class="board-btn" @click="restart">
             <rect :x="viewWidth / 2 - 95" :y="viewHeight" width="70" height="20" fill="url('#chess-board-bg')"></rect>
@@ -77,7 +86,7 @@
               电脑先手
             </text>
           </g>
-          <g id="white-first" :class="{ disabled: isComputerFirst, 'board-btn': true }" @click="changeFirst(false)" >
+          <g id="white-first" :class="{ disabled: isComputerFirst, 'board-btn': true }" @click="changeFirst(false)">
             <rect :x="viewWidth / 2 + 85" :y="viewHeight" width="70" height="20" fill="url('#chess-board-bg')"></rect>
             <text class="btn-text" :x="viewWidth / 2 + 95" :y="viewHeight" textLength="50" text-anchor="start" dy="14">
               玩家先手
@@ -87,6 +96,8 @@
             <polygon :points="hideBtnPoints" fill="url('#chess-board-bg')" @click="hideBtn" />
           </g>
         </g>
+
+        <!-- 棋盘主体 -->
         <g id="chess-board" @click="handleClick">
           <rect id="board" x="0" y="0" :width="viewWidth" :height="viewHeight"></rect>
           <use
@@ -109,33 +120,44 @@
             />
           </g>
         </g>
-        <g id="black-piece">
+
+        <!-- 黑子与白子 -->
+        <g
+          v-for="color in [
+            ['white', whiteArr],
+            ['black', blackArr]
+          ]"
+          :key="color[0]"
+          :id="`${color[0]}-piece`"
+        >
           <circle
-            v-for="(item, index) in blackArr"
-            :key="`black-${index}`"
+            v-for="(item, index) in color[1]"
+            :key="`${color[0]}-${index}`"
             :cx="getPiecePos(item.col)"
             :cy="getPiecePos(item.row)"
             :r="circleRadius"
-            fill="url(#black-fill)"
-            filter="url(#shadow)"
-          />
-        </g>
-        <g id="white-piece">
-          <circle
-            v-for="(item, index) in whiteArr"
-            :key="`white-${index}`"
-            :cx="item.col * cellSize + boardPadding"
-            :cy="item.row * cellSize + boardPadding"
-            :r="circleRadius"
-            fill="url(#white-fill)"
+            :class="{ 'twinkle-animation2': item.animation, translucent: isEnd && !item.animation }"
+            :fill="`url(#${color[0]}-fill)`"
             filter="url(#shadow)"
           />
         </g>
       </svg>
     </div>
-    <!-- <v-btn color="info" @click="restart">重新开始</v-btn>
-    <v-btn color="info" @click="preStep" :disabled="isEnd || preChessBoard === null">悔棋</v-btn>
-    <v-switch label="电脑先手" v-model="isComputerFirst" @change="changeFirst"></v-switch> -->
+
+    <!-- 重新开始弹窗 -->
+    <v-row justify="center">
+      <v-dialog v-model="dialog" persistent max-width="290">
+        <v-card>
+          <v-card-title class="headline">当前对局未结束！</v-card-title>
+          <v-card-text>是否重新开始游戏？</v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="green darken-1" text @click="dialog = false">取消</v-btn>
+            <v-btn color="green darken-1" text @click="handleRestart">确定</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+    </v-row>
   </div>
 </template>
 
@@ -165,12 +187,13 @@ export default {
       computerWin: [],
       isComputerFirst: false,
       isEnd: false,
+      dialog: false,
+      bottomBtnHide: false,
 
       preChessBoard: null,
       prePos: null,
       preMyWin: [],
-      preComputerWin: [],
-      bottomBtnHide: false
+      preComputerWin: []
     }
   },
   computed: {
@@ -213,9 +236,10 @@ export default {
         .map((item, row) => {
           return item.map((item, col) => {
             return {
-              row,
+              animation: false,
               col,
-              color: item
+              color: item,
+              row
             }
           })
         })
@@ -251,7 +275,7 @@ export default {
     } else {
       this.isComputerFirst = JSON.parse(local)
     }
-    this.restart()
+    this.handleRestart()
   },
 
   methods: {
@@ -291,17 +315,31 @@ export default {
         gameOverText = '电脑赢了!'
       }
       this.nextColor = 3 - this.nextColor
-
       for (var k = 0; k < this.winsNum; k++) {
         if (this.wins[j][i][k]) {
           this[current][k]++
-          // 第k种赢法中，有黑子和白子两种，如果其中白子占用了这条路线，那么黑子则不可能在这条路线取胜，直接设为负数或6，不加入分值计算
-          this[next][k] = -5
+          if (this.computerWin)
+            // 第k种赢法中，有黑子和白子两种，如果其中白子占用了这条路线，那么黑子则不可能在这条路线取胜，直接设为负数或6，不加入分值计算
+            this[next][k] = -5
           if (this[current][k] == 5) {
+            console.log('k', k)
+            console.log('this.wins', this.wins)
+
+            // 第K种赢法中，5个旗子在棋盘的位置，由二维数组存放
+            for (let row = 0; row < this.h; row++) {
+              for (let col = 0; col < this.v; col++) {
+                if (this.wins[row][col][k]) {
+                  let index = row * this.h + col
+                  console.log('index', index)
+                  let item = this.chessBoardObj[index]
+                  item = Object.assign(item, { animation: true })
+                  this.chessBoardObj[index] = item
+                }
+              }
+            }
+            console.log('animationChess:', this.chessBoardObj)
+
             this.isEnd = true
-            setTimeout(() => {
-              window.alert(gameOverText)
-            })
           }
         }
       }
@@ -317,9 +355,9 @@ export default {
       }
 
       //横线
-      for (var i = 0; i < this.h; i++) {
-        for (var j = 0; j < this.v - 4; j++) {
-          for (var k = 0; k < 5; k++) {
+      for (let i = 0; i < this.h; i++) {
+        for (let j = 0; j < this.v - 4; j++) {
+          for (let k = 0; k < 5; k++) {
             this.wins[i][j + k][this.winsNum] = true
           }
           this.winsNum++
@@ -327,9 +365,9 @@ export default {
       }
 
       //竖线
-      for (var i = 0; i < this.h; i++) {
-        for (var j = 0; j < this.v - 4; j++) {
-          for (var k = 0; k < 5; k++) {
+      for (let i = 0; i < this.h; i++) {
+        for (let j = 0; j < this.v - 4; j++) {
+          for (let k = 0; k < 5; k++) {
             this.wins[j + k][i][this.winsNum] = true
           }
           this.winsNum++
@@ -337,9 +375,9 @@ export default {
       }
 
       //斜线
-      for (var i = 0; i < this.h - 4; i++) {
-        for (var j = 0; j < this.v - 4; j++) {
-          for (var k = 0; k < 5; k++) {
+      for (let i = 0; i < this.h - 4; i++) {
+        for (let j = 0; j < this.v - 4; j++) {
+          for (let k = 0; k < 5; k++) {
             this.wins[i + k][j + k][this.winsNum] = true
           }
           this.winsNum++
@@ -347,9 +385,9 @@ export default {
       }
 
       //反斜线
-      for (var i = 0; i < this.h - 4; i++) {
-        for (var j = this.v - 1; j > 3; j--) {
-          for (var k = 0; k < 5; k++) {
+      for (let i = 0; i < this.h - 4; i++) {
+        for (let j = this.v - 1; j > 3; j--) {
+          for (let k = 0; k < 5; k++) {
             this.wins[i + k][j - k][this.winsNum] = true
           }
           this.winsNum++
@@ -454,6 +492,7 @@ export default {
     },
 
     changeFirst(val) {
+      if (this.isComputerFirst === val) return
       console.log('change')
       this.isComputerFirst = val
       window.localStorage.setItem('isComputerFirst', val)
@@ -472,10 +511,10 @@ export default {
         this.preComputerWin = cd(this.computerWin)
         this.prePos = cd(this.currentPos)
       }
-      const zoom_x = this.viewWidth / this.$refs.svg.clientWidth
+      const zoom_X = this.viewWidth / this.$refs.svg.clientWidth
       const zoom_Y = (this.viewHeight + 30) / this.$refs.svg.clientHeight
 
-      let x = e.offsetX * zoom_x - this.boardPadding
+      let x = e.offsetX * zoom_X - this.boardPadding
       let y = e.offsetY * zoom_Y - this.boardPadding
 
       let i = Math.round(x / this.cellSize)
@@ -484,9 +523,9 @@ export default {
         return
       }
 
-      console.log(i, j)
-
       if (this.chessBoard[j][i] !== 0) return
+
+      console.log(i, j)
 
       this.oneStep(j, i, COLOR.White)
 
@@ -494,17 +533,34 @@ export default {
       if (!this.isEnd) this.computerAI()
     },
 
-    restart() {
-      this.chessBoard = this.initBoardData()
+    handleComputerFirst() {
       if (this.isComputerFirst) {
-        this.oneStep(Math.floor(this.h / 2), Math.floor(this.v / 2), COLOR.Black)
+        let a = Math.floor(this.h / 2)
+        let b = Math.floor(this.v / 2)
+        this.oneStep(a, b, COLOR.Black)
+        this.nextColor = COLOR.White
+        this.computeRes(a, b)
       }
-      this.nextColor = COLOR.White
+    },
+
+    handleRestart() {
+      this.chessBoard = this.initBoardData()
       this.generateAllWinsArr()
       this.initWinsByBoth()
+      this.handleComputerFirst()
       this.currentPos = null
       this.preChessBoard = null
+      this.animationChess = {}
       this.isEnd = false
+      this.dialog = false
+    },
+
+    restart() {
+      if (this.isEnd || this.chessBoardArr.every(item => item === 0)) {
+        this.handleRestart()
+      } else {
+        this.dialog = true
+      }
     },
 
     preStep() {
@@ -547,6 +603,10 @@ export default {
       fill: url('#chess-board-bg');
       filter: url('#board-shadow');
     }
+  }
+
+  .translucent {
+    opacity: 0.5;
   }
 }
 .svg {

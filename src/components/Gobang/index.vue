@@ -258,7 +258,7 @@ export default {
           break
       }
 
-      // 避免最后一个棋子没有动画
+      // setTimeout避免最后一个棋子没有动画
       setTimeout(() => {
         res.forEach(item => {
           this.$refs.piece[item].classList.add('twinkle-animation')
